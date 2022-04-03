@@ -13,7 +13,6 @@ def read_from_fd(fd):
 
 
 class CUL(object):
-    
     def __init__(self, serial_port, log_level=logging.ERROR):
         super(CUL, self).__init__()
         self._port = serial_port
@@ -27,10 +26,15 @@ class CUL(object):
         self._logger.setLevel(log_level)
         self._logger.info("CUL configured and ready.")
         self._logger.debug("Using serial port {0}.".format(serial_port))
-        
+
     def __del__(self):
-        os.close(self._fd)
-        
+        try:
+            fd = self._fd
+        except AttributeError:
+            pass
+        else:
+            os.close(fd)
+
     def send(self, msg):
         if type(msg) == bytes:
             msg = msg.decode("ascii")
@@ -39,7 +43,7 @@ class CUL(object):
         os.set_blocking(self._fd, True)
         os.write(self._fd, msg.encode("ascii"))
         self._logger.debug("Message transmitted: '{0}'.".format(msg.strip()))
-        
+
     def recv(self):
         rin, _, _ = select.select([self._fd], [], [], 0)
         if rin:
