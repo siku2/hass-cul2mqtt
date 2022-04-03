@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
 import logging
-from culmqtt.culmqtt import CULMQTT
 
+from culmqtt.culmqtt import CULMQTT
 
 
 class VAction(argparse.Action):
@@ -10,6 +10,7 @@ class VAction(argparse.Action):
     Verbosity flag action. Original source:
       http://stackoverflow.com/a/6076779/5480526
     """
+
     def __call__(self, parser, args, values, option_string=None):
         if values == None:
             values = "1"
@@ -20,15 +21,16 @@ class VAction(argparse.Action):
         setattr(args, self.dest, values)
 
 
-
 def prepare_parser(parser):
     parser.add_argument("--device", type=str, default="/dev/ttyUSB0")
     parser.add_argument("--broker", type=str, default="localhost")
     parser.add_argument("--topic", type=str, default="cul")
     parser.add_argument("--clientid", type=str, default="cul")
     parser.add_argument("--delayms", type=int, default=500)
-    parser.add_argument('-v', nargs='?', action=VAction, dest="verbose")
-    
+    parser.add_argument("-v", nargs="?", action=VAction, dest="verbose")
+    parser.add_argument("--username", type=str, default=None)
+    parser.add_argument("--password", type=str, default=None)
+
 
 def run_program(parser):
     config = vars(parser.parse_args())
@@ -42,15 +44,19 @@ def run_program(parser):
     logger = logging.getLogger("cul-mqtt")
     logger.setLevel(log_level)
     # run
-    c = CULMQTT(config["device"], config["broker"],
-                mqtt_client_id=config["clientid"],
-                mqtt_topic=config["topic"],
-                delay_send=config["delayms"]/1000.0,
-                log_level=log_level)
+    c = CULMQTT(
+        config["device"],
+        config["broker"],
+        mqtt_client_id=config["clientid"],
+        mqtt_topic=config["topic"],
+        mqtt_username=config["username"],
+        mqtt_password=config["password"],
+        delay_send=config["delayms"] / 1000.0,
+        log_level=log_level,
+    )
     c.start()
-    
-    
-    
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CUL to MQTT bridge.")
     prepare_parser(parser)
